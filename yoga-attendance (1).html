@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Āsana Studio · Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sage:#7a9e7e;--sage-light:#c8ddc9;--sage-pale:#eef4ee;
+  --clay:#c97d5b;--clay-light:#f2ddd3;
+  --gold:#d4a847;--gold-light:#fdf3dc;--gold-border:#f0d88a;
+  --violet:#8b6bb1;--violet-light:#f0eaf8;--violet-border:#c9b3e0;
+  --ink:#2a2a25;--ink-mid:#5a5a52;--ink-soft:#9a9a8f;
+  --cream:#faf8f3;--white:#ffffff;
+  --border:rgba(42,42,37,0.1);--border-mid:rgba(42,42,37,0.22);
+  --red:#d94f4f;
+  --radius:16px;--radius-sm:8px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px;}
+
+/* ── LOCK SCREEN ── */
+.lock-screen{position:fixed;inset:0;background:var(--cream);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.lock-screen.hidden{display:none;}
+.lock-box{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:2rem 1.75rem;width:100%;max-width:360px;text-align:center;}
+.lock-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;margin-bottom:4px;}
+.lock-logo span{color:var(--sage);font-style:italic;}
+.lock-sub{font-size:13px;color:var(--ink-soft);margin-bottom:1.75rem;}
+.lock-tabs{display:flex;background:var(--cream);border-radius:var(--radius-sm);padding:3px;gap:3px;margin-bottom:1.5rem;}
+.lock-tab{flex:1;padding:7px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;background:none;color:var(--ink-mid);transition:all .15s;}
+.lock-tab.active{background:var(--white);color:var(--ink);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.lock-field{width:100%;height:44px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);padding:0 14px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--white);color:var(--ink);outline:none;margin-bottom:10px;text-align:center;letter-spacing:.1em;}
+.lock-field:focus{border-color:var(--sage);box-shadow:0 0 0 3px rgba(122,158,126,.15);}
+.lock-field.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(217,79,79,.12);}
+.lock-btn{width:100%;height:44px;background:var(--ink);color:var(--white);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s;margin-top:4px;}
+.lock-btn:hover{opacity:.82;}
+.lock-err{font-size:12px;color:var(--red);margin-top:8px;min-height:18px;}
+.lock-hint{font-size:11px;color:var(--ink-soft);margin-top:14px;line-height:1.5;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(250,248,243,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1rem;display:flex;align-items:center;height:56px;gap:8px;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);margin-right:auto;white-space:nowrap;}
+.nav-logo span{color:var(--sage);font-style:italic;}
+.nav-tabs{display:flex;gap:2px;flex-wrap:nowrap;}
+.tab-btn{background:none;border:none;cursor:pointer;padding:6px 9px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:400;color:var(--ink-mid);transition:all .15s;white-space:nowrap;}
+.tab-btn:hover{background:var(--border);color:var(--ink);}
+.tab-btn.active{background:var(--ink);color:var(--white);font-weight:500;}
+.nav-role{font-size:11px;color:var(--ink-soft);padding:4px 10px;border:1px solid var(--border);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:4px;}
+.nav-logout{background:none;border:none;cursor:pointer;font-size:11px;color:var(--ink-soft);padding:4px 8px;border-radius:999px;transition:all .15s;}
+.nav-logout:hover{background:var(--border);color:var(--red);}
+
+/* ── PAGES ── */
+.page{display:none;padding:1.5rem 1rem;max-width:740px;margin:0 auto;}
+.page.active{display:block;}
+
+/* ── SESSION BANNER ── */
+.session-banner{border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:12px;}
+.session-banner.udaya{background:linear-gradient(135deg,#fff9e6,#fef3c7);border:1px solid var(--gold-border);}
+.session-banner.chintan{background:linear-gradient(135deg,#f3f0fb,#ede8f8);border:1px solid var(--violet-border);}
+.session-banner.noclass{background:var(--white);border:1px solid var(--border);}
+.sb-icon{font-size:26px;line-height:1;}
+.sb-name{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1.2;}
+.udaya .sb-name{color:#92600a;}.chintan .sb-name{color:var(--violet);}.noclass .sb-name{color:var(--ink-mid);}
+.sb-time{font-size:12px;margin-top:2px;}
+.udaya .sb-time{color:#b07d2a;}.chintan .sb-time{color:#6a4fa0;}.noclass .sb-time{color:var(--ink-soft);}
+.sb-date{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-top:3px;}
+
+/* ── COUNT ── */
+.count-row{display:flex;gap:8px;margin-bottom:1.1rem;align-items:center;flex-wrap:wrap;}
+.count-pill{background:var(--sage-pale);color:var(--sage);padding:4px 13px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid var(--sage-light);}
+
+/* ── STUDENT GRID ── */
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:9px;margin-bottom:1.5rem;}
+.student-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem .8rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;user-select:none;position:relative;}
+.student-card:hover{border-color:var(--sage);transform:translateY(-2px);}
+.student-card.checked{background:var(--sage-pale);border-color:var(--sage);}
+.student-card.checked .s-avatar{background:var(--sage);color:var(--white);}
+.s-avatar{width:40px;height:40px;border-radius:50%;background:var(--sage-pale);color:var(--sage);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;transition:all .2s;flex-shrink:0;}
+.s-name{font-size:12px;font-weight:500;color:var(--ink);line-height:1.3;}
+.s-check{font-size:10px;color:var(--sage);font-weight:500;opacity:0;transition:opacity .2s;}
+.student-card.checked .s-check{opacity:1;}
+.s-streak{font-size:10px;color:var(--gold);font-weight:500;}
+.s-badge-row{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;}
+
+/* ── SECTION TITLE ── */
+.section-title{font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:300;color:var(--ink);margin-bottom:1.1rem;}
+.section-title em{font-style:italic;color:var(--clay);}
+.section-sub{font-size:13px;color:var(--ink-soft);margin-top:-.75rem;margin-bottom:1.1rem;}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.4rem;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem;}
+.stat-label{font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--ink);}
+
+/* ── MANUAL ENTRY ── */
+.manual-box{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;}
+.manual-box h3{font-size:14px;font-weight:500;margin-bottom:1rem;color:var(--ink);}
+.manual-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.manual-sel{height:40px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);padding:0 10px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);color:var(--ink);outline:none;flex:1;min-width:120px;}
+.manual-sel:focus{border-color:var(--sage);}
+.manual-date{height:40px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);padding:0 10px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);color:var(--ink);outline:none;flex:1;min-width:140px;}
+.manual-date:focus{border-color:var(--sage);}
+.btn-manual{height:40px;padding:0 16px;background:var(--sage);color:var(--white);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.btn-manual:hover{opacity:.82;}
+.btn-danger{background:var(--red);}
+.manual-result{font-size:12px;color:var(--sage);min-height:16px;margin-top:2px;}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:.9rem;}
+.cal-nav button{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--ink-mid);transition:all .15s;}
+.cal-nav button:hover{background:var(--border);}
+.cal-month{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:400;flex:1;text-align:center;}
+.cal-grid{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem;}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-dh{text-align:center;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);padding:9px 0;border-bottom:1px solid var(--border);}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;position:relative;border:.5px solid var(--border);gap:2px;}
+.cal-day.other-month{color:var(--ink-soft);background:var(--cream);}
+.cal-day.udaya-day{background:#fffbeb;}
+.cal-day.chintan-day{background:#f5f0fd;}
+.cal-day.has-att{cursor:pointer;}
+.cal-day.has-att:hover{opacity:.8;}
+.cal-dot{width:6px;height:6px;border-radius:50%;}
+.cal-dot.udaya{background:var(--gold);}
+.cal-dot.chintan{background:var(--violet);}
+.cal-day-num{font-size:11px;line-height:1;}
+.cal-count{font-size:9px;color:var(--ink-soft);}
+.cal-legend{display:flex;gap:14px;margin-bottom:1.1rem;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-mid);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ── HISTORY ── */
+.history-filter{display:flex;gap:6px;margin-bottom:.9rem;flex-wrap:wrap;}
+.filter-btn{background:none;border:1px solid var(--border);border-radius:999px;padding:5px 13px;font-size:12px;cursor:pointer;color:var(--ink-mid);transition:all .15s;font-family:'DM Sans',sans-serif;}
+.filter-btn:hover,.filter-btn.active{background:var(--ink);color:var(--white);border-color:var(--ink);}
+.history-list{display:flex;flex-direction:column;gap:9px;}
+.history-item{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.history-header{padding:.8rem 1.1rem;display:flex;align-items:center;gap:9px;cursor:pointer;transition:background .15s;}
+.history-header:hover{background:var(--sage-pale);}
+.session-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.session-dot.udaya{background:var(--gold);}
+.session-dot.chintan{background:var(--violet);}
+.history-date-badge{background:var(--sage-pale);color:var(--sage);border:1px solid var(--sage-light);border-radius:var(--radius-sm);padding:3px 8px;font-size:11px;font-weight:500;white-space:nowrap;}
+.history-info{flex:1;}
+.history-info strong{font-size:13px;font-weight:500;color:var(--ink);display:block;}
+.history-info span{font-size:11px;color:var(--ink-soft);}
+.chevron{color:var(--ink-soft);font-size:16px;transition:transform .2s;}
+.history-item.open .chevron{transform:rotate(180deg);}
+.history-names{display:none;padding:0 1.1rem .8rem;flex-wrap:wrap;gap:6px;}
+.history-item.open .history-names{display:flex;}
+.name-chip{background:var(--sage-pale);color:var(--ink);border:1px solid var(--sage-light);border-radius:999px;padding:3px 10px;font-size:11px;}
+.no-history{text-align:center;color:var(--ink-soft);padding:3rem 1rem;font-size:14px;}
+
+/* ── LEADERBOARD ── */
+.lb-section{margin-bottom:1.5rem;}
+.lb-title-row{font-size:13px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.7rem;}
+.lb-list{display:flex;flex-direction:column;gap:8px;}
+.lb-row{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.7rem 1rem;display:flex;align-items:center;gap:10px;}
+.lb-rank{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;width:28px;text-align:center;color:var(--ink-soft);}
+.lb-rank.top1{color:var(--gold);}
+.lb-rank.top2{color:#a0a0a0;}
+.lb-rank.top3{color:#b87333;}
+.lb-avatar{width:34px;height:34px;border-radius:50%;background:var(--clay-light);color:var(--clay);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;}
+.lb-name{flex:1;font-size:13px;}
+.lb-badges-row{display:flex;gap:2px;}
+.lb-streak{font-size:12px;color:var(--gold);font-weight:500;white-space:nowrap;}
+.lb-total{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+
+/* ── BADGES GUIDE ── */
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin-bottom:1.5rem;}
+.badge-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem .9rem;text-align:center;}
+.badge-card.earned{border-color:var(--gold-border);background:var(--gold-light);}
+.badge-emoji{font-size:30px;line-height:1;margin-bottom:7px;}
+.badge-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.badge-desc{font-size:11px;color:var(--ink-soft);line-height:1.4;}
+.badge-card.locked .badge-emoji{filter:grayscale(1);opacity:.3;}
+.badge-card.locked .badge-name,.badge-card.locked .badge-desc{color:var(--ink-soft);}
+
+/* ── MY STATS (student view) ── */
+.my-stats{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;}
+.my-stats-head{display:flex;align-items:center;gap:12px;margin-bottom:1rem;}
+.my-avatar{width:48px;height:48px;border-radius:50%;background:var(--sage-pale);color:var(--sage);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;flex-shrink:0;}
+.my-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;}
+.my-role{font-size:11px;color:var(--ink-soft);}
+.my-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
+.my-stat{background:var(--cream);border-radius:var(--radius-sm);padding:.75rem .5rem;text-align:center;}
+.my-stat-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;}
+.my-stat-lbl{font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.my-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.my-badge{background:var(--gold-light);border:1px solid var(--gold-border);border-radius:var(--radius-sm);padding:6px 10px;display:flex;align-items:center;gap:6px;font-size:12px;}
+
+/* ── ROSTER ── */
+.roster-top{display:flex;gap:8px;margin-bottom:1.1rem;align-items:center;}
+.roster-input{flex:1;height:40px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);padding:0 13px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);color:var(--ink);outline:none;}
+.roster-input:focus{border-color:var(--sage);box-shadow:0 0 0 3px rgba(122,158,126,.15);}
+.btn-add{height:40px;padding:0 15px;background:var(--ink);color:var(--white);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.btn-add:hover{opacity:.8;}
+.roster-list{display:flex;flex-direction:column;gap:7px;}
+.roster-row{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;display:flex;align-items:center;gap:9px;}
+.r-avatar{width:32px;height:32px;border-radius:50%;background:var(--clay-light);color:var(--clay);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.r-meta{font-size:11px;color:var(--ink-soft);}
+.btn-del{background:none;border:none;cursor:pointer;color:var(--ink-soft);font-size:17px;padding:4px;border-radius:4px;transition:color .15s;line-height:1;}
+.btn-del:hover{color:var(--red);}
+
+/* ── SETTINGS ── */
+.settings-section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.1rem;}
+.settings-section h3{font-size:14px;font-weight:500;margin-bottom:1rem;color:var(--ink);}
+.setting-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+.setting-label{font-size:12px;color:var(--ink-mid);min-width:110px;}
+.setting-input{flex:1;min-width:160px;height:38px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);padding:0 12px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--white);color:var(--ink);outline:none;letter-spacing:.08em;}
+.setting-input:focus{border-color:var(--sage);}
+.btn-save{height:38px;padding:0 14px;background:var(--sage);color:var(--white);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+.btn-save:hover{opacity:.82;}
+.setting-hint{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--white);padding:10px 20px;border-radius:999px;font-size:13px;transition:transform .3s;z-index:999;white-space:nowrap;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── BADGE POPUP ── */
+.badge-popup{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;}
+.badge-popup.show{opacity:1;pointer-events:all;}
+.badge-popup-inner{background:var(--white);border-radius:var(--radius);padding:2rem;text-align:center;max-width:280px;transform:scale(.85);transition:transform .3s;}
+.badge-popup.show .badge-popup-inner{transform:scale(1);}
+.bp-emoji{font-size:52px;margin-bottom:10px;}
+.bp-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:4px;}
+.bp-sub{font-size:13px;color:var(--ink-mid);margin-bottom:16px;}
+.bp-close{background:var(--ink);color:var(--white);border:none;border-radius:var(--radius-sm);padding:8px 24px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+
+@media(max-width:480px){
+  .tab-btn{padding:5px 7px;font-size:11px;}
+  .nav-logo{font-size:17px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-logo">āsana <span>studio</span></div>
+    <div class="lock-sub">Yoga attendance portal</div>
+    <div class="lock-tabs">
+      <button class="lock-tab active" onclick="setLockTab('student',this)">🧘 Student</button>
+      <button class="lock-tab" onclick="setLockTab('admin',this)">🔐 Instructor</button>
+    </div>
+    <div id="student-login">
+      <select class="lock-field" id="student-select" style="letter-spacing:0;">
+        <option value="">Select your name…</option>
+      </select>
+      <button class="lock-btn" onclick="loginStudent()">Enter →</button>
+      <div class="lock-hint">Students can view their streak &amp; the leaderboard.</div>
+    </div>
+    <div id="admin-login" style="display:none;">
+      <input class="lock-field" id="admin-pass" type="password" placeholder="Enter passcode" autocomplete="off">
+      <button class="lock-btn" onclick="loginAdmin()">Enter →</button>
+      <div class="lock-err" id="admin-err"></div>
+      <div class="lock-hint">Default: <strong>UDAYA2025</strong> or <strong>CHINTAN2025</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<nav id="main-nav" style="display:none;">
+  <div class="nav-logo">āsana <span>studio</span></div>
+  <div class="nav-tabs" id="nav-tabs"></div>
+  <div class="nav-role" id="nav-role"></div>
+  <button class="nav-logout" onclick="logout()">Sign out</button>
+</nav>
+
+<!-- CHECK-IN (admin) -->
+<div class="page" id="page-checkin">
+  <div id="session-banner"></div>
+  <div class="count-row"><div class="count-pill" id="count-pill">0 checked in</div></div>
+  <div class="students-grid" id="students-grid"></div>
+</div>
+
+<!-- MANUAL ENTRY (admin) -->
+<div class="page" id="page-manual">
+  <h2 class="section-title">Manual <em>entry</em></h2>
+  <p class="section-sub">Add or remove attendance for any student on any past or present class day.</p>
+  <div class="manual-box">
+    <h3>➕ Add attendance</h3>
+    <div class="manual-row">
+      <select class="manual-sel" id="m-student">
+        <option value="">Select student…</option>
+      </select>
+      <input class="manual-date" type="date" id="m-date">
+      <button class="btn-manual" onclick="manualAdd()">Add</button>
+    </div>
+    <div class="manual-result" id="m-result"></div>
+  </div>
+  <div class="manual-box">
+    <h3>➖ Remove attendance</h3>
+    <div class="manual-row">
+      <select class="manual-sel" id="mr-student">
+        <option value="">Select student…</option>
+      </select>
+      <input class="manual-date" type="date" id="mr-date">
+      <button class="btn-manual btn-danger" onclick="manualRemove()">Remove</button>
+    </div>
+    <div class="manual-result" id="mr-result" style="color:var(--red);"></div>
+  </div>
+</div>
+
+<!-- CALENDAR (admin) -->
+<div class="page" id="page-calendar">
+  <h2 class="section-title">Monthly <em>calendar</em></h2>
+  <div class="cal-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Udaya Yoga (Mon/Wed/Fri 7–7:30am)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--violet)"></div>Chintan-Manthan (Tue/Thu/Sat 8:30–9pm)</div>
+  </div>
+  <div class="cal-nav">
+    <button onclick="calPrev()">‹</button>
+    <div class="cal-month" id="cal-month"></div>
+    <button onclick="calNext()">›</button>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-header">
+      <div class="cal-dh">Sun</div><div class="cal-dh">Mon</div><div class="cal-dh">Tue</div>
+      <div class="cal-dh">Wed</div><div class="cal-dh">Thu</div><div class="cal-dh">Fri</div><div class="cal-dh">Sat</div>
+    </div>
+    <div class="cal-days" id="cal-days"></div>
+  </div>
+  <div id="cal-detail"></div>
+</div>
+
+<!-- HISTORY / REPORTS (admin) -->
+<div class="page" id="page-history">
+  <h2 class="section-title">Attendance <em>reports</em></h2>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Total classes</div><div class="stat-value" id="stat-classes">0</div></div>
+    <div class="stat-card"><div class="stat-label">Total check-ins</div><div class="stat-value" id="stat-total">0</div></div>
+    <div class="stat-card"><div class="stat-label">Avg per class</div><div class="stat-value" id="stat-avg">—</div></div>
+  </div>
+  <div class="history-filter">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('udaya',this)">🌅 Udaya Yoga</button>
+    <button class="filter-btn" onclick="setFilter('chintan',this)">🌙 Chintan-Manthan</button>
+  </div>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<!-- LEADERBOARD + BADGES (admin & student) -->
+<div class="page" id="page-badges">
+  <h2 class="section-title">Streaks &amp; <em>badges</em></h2>
+  <div class="lb-section">
+    <div class="lb-title-row">🏆 Leaderboard</div>
+    <div class="lb-list" id="lb-list"></div>
+  </div>
+  <div class="lb-title-row" style="margin-bottom:.7rem;">🎖️ Badge guide</div>
+  <div class="badge-grid" id="badge-guide"></div>
+</div>
+
+<!-- MY STATS (student only) -->
+<div class="page" id="page-mystats">
+  <h2 class="section-title">My <em>progress</em></h2>
+  <div id="my-stats-content"></div>
+</div>
+
+<!-- ROSTER (admin) -->
+<div class="page" id="page-roster">
+  <h2 class="section-title">Student <em>roster</em></h2>
+  <div class="roster-top">
+    <input class="roster-input" id="roster-input" type="text" placeholder="Student name…" maxlength="40">
+    <button class="btn-add" onclick="addStudent()">+ Add</button>
+  </div>
+  <div class="roster-list" id="roster-list"></div>
+</div>
+
+<!-- SETTINGS (admin) -->
+<div class="page" id="page-settings">
+  <h2 class="section-title">Admin <em>settings</em></h2>
+  <div class="settings-section">
+    <h3>🔐 Change passcodes</h3>
+    <div class="setting-row">
+      <div class="setting-label">Instructor 1</div>
+      <input class="setting-input" id="set-pass1" type="text" placeholder="New passcode">
+      <button class="btn-save" onclick="savePass(1)">Save</button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Instructor 2</div>
+      <input class="setting-input" id="set-pass2" type="text" placeholder="New passcode">
+      <button class="btn-save" onclick="savePass(2)">Save</button>
+    </div>
+    <p class="setting-hint">Passcodes are case-insensitive. Share with your co-instructor only.</p>
+  </div>
+  <div class="settings-section">
+    <h3>🗑️ Danger zone</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-manual btn-danger" onclick="clearAllAttendance()">Clear all attendance data</button>
+      <button class="btn-manual btn-danger" onclick="clearAllData()">Reset entire app</button>
+    </div>
+    <p class="setting-hint" style="margin-top:8px;">These actions cannot be undone.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="badge-popup" id="badge-popup">
+  <div class="badge-popup-inner">
+    <div class="bp-emoji" id="bp-emoji"></div>
+    <div class="bp-title" id="bp-title"></div>
+    <div class="bp-sub" id="bp-sub"></div>
+    <button class="bp-close" onclick="closeBadgePopup()">Keep going! 🙏</button>
+  </div>
+</div>
+
+<script>
+// ══ DATA KEYS ══
+const KR='yoga_roster',KH='yoga_history',KP='yoga_passes';
+const DEFAULT_PASSES=['UDAYA2025','CHINTAN2025'];
+const SESSIONS={
+  udaya:{days:[1,3,5],name:'Udaya Yoga',time:'7:00 – 7:30 am',emoji:'🌅',color:'udaya'},
+  chintan:{days:[2,4,6],name:'Chintan-Manthan',time:'8:30 – 9:00 pm',emoji:'🌙',color:'chintan'}
+};
+const BADGES=[
+  {id:'first',emoji:'🌱',name:'First step',desc:'Attend your first class',check:s=>s.total>=1},
+  {id:'week1',emoji:'🌿',name:'First week',desc:'3 classes in a week',check:s=>s.maxWeek>=3},
+  {id:'streak3',emoji:'🔥',name:'On fire',desc:'3-class streak',check:s=>s.maxStreak>=3},
+  {id:'streak7',emoji:'⚡',name:'Lightning',desc:'7-class streak',check:s=>s.maxStreak>=7},
+  {id:'streak14',emoji:'🌟',name:'Star yogi',desc:'14-class streak',check:s=>s.maxStreak>=14},
+  {id:'streak21',emoji:'💫',name:'Cosmic',desc:'21-class streak',check:s=>s.maxStreak>=21},
+  {id:'total10',emoji:'🏅',name:'Dedicated',desc:'10 total classes',check:s=>s.total>=10},
+  {id:'total25',emoji:'🥈',name:'Committed',desc:'25 total classes',check:s=>s.total>=25},
+  {id:'total50',emoji:'🥇',name:'Champion',desc:'50 total classes',check:s=>s.total>=50},
+  {id:'udaya5',emoji:'☀️',name:'Sun seeker',desc:'5 Udaya morning sessions',check:s=>s.udayaTotal>=5},
+  {id:'chintan5',emoji:'🌙',name:'Night owl',desc:'5 Chintan evening sessions',check:s=>s.chintanTotal>=5},
+  {id:'both',emoji:'🧘',name:'Dual path',desc:'Attended both session types',check:s=>s.udayaTotal>=1&&s.chintanTotal>=1},
+];
+
+// ══ STATE ══
+let currentRole=null; // 'admin' | 'student'
+let currentStudent=null;
+let historyFilter='all';
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+
+// ══ STORAGE ══
+function loadRoster(){try{return JSON.parse(localStorage.getItem(KR))||[];}catch{return[];}}
+function saveRoster(r){localStorage.setItem(KR,JSON.stringify(r));}
+function loadHistory(){try{return JSON.parse(localStorage.getItem(KH))||{};}catch{return{};}}
+function saveHistory(h){localStorage.setItem(KH,JSON.stringify(h));}
+function loadPasses(){try{return JSON.parse(localStorage.getItem(KP))||DEFAULT_PASSES;}catch{return DEFAULT_PASSES;}}
+function savePasses(p){localStorage.setItem(KP,JSON.stringify(p));}
+
+// ══ HELPERS ══
+function todayKey(){return new Date().toISOString().slice(0,10);}
+function sessionForDate(key){
+  const d=new Date(key+'T12:00:00').getDay();
+  if(SESSIONS.udaya.days.includes(d)) return 'udaya';
+  if(SESSIONS.chintan.days.includes(d)) return 'chintan';
+  return null;
+}
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+function getWeekKey(dt){const d=new Date(dt);d.setDate(d.getDate()-d.getDay());return d.toISOString().slice(0,10);}
+function prevScheduledDay(key){
+  const dt=new Date(key+'T12:00:00');
+  for(let i=1;i<=7;i++){
+    const p=new Date(dt);p.setDate(p.getDate()-i);
+    const pk=p.toISOString().slice(0,10);
+    if(sessionForDate(pk)!==null) return pk;
+  }
+  return null;
+}
+function fmtDate(key){return new Date(key+'T12:00:00').toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
+
+function getStudentStats(name){
+  const h=loadHistory();
+  const dates=Object.keys(h).filter(d=>h[d].includes(name)).sort();
+  const total=dates.length;
+  let udayaTotal=0,chintanTotal=0;
+  dates.forEach(d=>{const s=sessionForDate(d);if(s==='udaya')udayaTotal++;if(s==='chintan')chintanTotal++;});
+  let maxStreak=0,curStreak=0,lastDate=null;
+  const allSched=Object.keys(h).filter(d=>sessionForDate(d)!==null).sort();
+  allSched.forEach(d=>{
+    if(h[d].includes(name)){
+      curStreak=(!lastDate)?1:(prevScheduledDay(d)===lastDate?curStreak+1:1);
+      lastDate=d;if(curStreak>maxStreak)maxStreak=curStreak;
+    } else {lastDate=null;curStreak=0;}
+  });
+  let currentStreak=0;
+  const rev=[...allSched].reverse();
+  for(const d of rev){if(h[d].includes(name))currentStreak++;else break;}
+  let maxWeek=0;const wm={};
+  dates.forEach(d=>{const dt=new Date(d+'T12:00:00');const wk=getWeekKey(dt);wm[wk]=(wm[wk]||0)+1;if(wm[wk]>maxWeek)maxWeek=wm[wk];});
+  return{total,udayaTotal,chintanTotal,maxStreak,currentStreak,maxWeek,dates};
+}
+function getBadges(stats){return BADGES.filter(b=>b.check(stats));}
+
+// ══ LOCK SCREEN ══
+let lockTab='student';
+function setLockTab(tab,btn){
+  lockTab=tab;
+  document.querySelectorAll('.lock-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('student-login').style.display=tab==='student'?'':'none';
+  document.getElementById('admin-login').style.display=tab==='admin'?'':'none';
+  document.getElementById('admin-err').textContent='';
+  document.getElementById('admin-pass').classList.remove('error');
+}
+
+function populateStudentSelect(){
+  const sel=document.getElementById('student-select');
+  const roster=loadRoster();
+  sel.innerHTML='<option value="">Select your name…</option>';
+  roster.forEach(n=>sel.innerHTML+=`<option value="${n}">${n}</option>`);
+}
+
+function loginStudent(){
+  const name=document.getElementById('student-select').value;
+  if(!name){showToast('Please select your name');return;}
+  currentRole='student';currentStudent=name;
+  bootApp();
+}
+
+function loginAdmin(){
+  const val=document.getElementById('admin-pass').value.trim().toUpperCase();
+  const passes=loadPasses().map(p=>p.toUpperCase());
+  if(passes.includes(val)){
+    currentRole='admin';currentStudent=null;
+    document.getElementById('admin-pass').value='';
+    bootApp();
+  } else {
+    document.getElementById('admin-err').textContent='Incorrect passcode. Try again.';
+    document.getElementById('admin-pass').classList.add('error');
+  }
+}
+
+document.getElementById('admin-pass').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdmin();});
+
+function logout(){
+  currentRole=null;currentStudent=null;
+  document.getElementById('lock-screen').classList.remove('hidden');
+  document.getElementById('main-nav').style.display='none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  populateStudentSelect();
+  document.getElementById('admin-pass').value='';
+  document.getElementById('admin-err').textContent='';
+}
+
+function bootApp(){
+  document.getElementById('lock-screen').classList.add('hidden');
+  document.getElementById('main-nav').style.display='flex';
+  buildNav();
+  if(currentRole==='admin'){
+    showPage('checkin');
+    populateManualSelects();
+  } else {
+    showPage('mystats');
+  }
+}
+
+// ══ NAV ══
+function buildNav(){
+  const tabs=document.getElementById('nav-tabs');
+  const role=document.getElementById('nav-role');
+  if(currentRole==='admin'){
+    tabs.innerHTML=`
+      <button class="tab-btn" onclick="showPage('checkin',this)">Check-in</button>
+      <button class="tab-btn" onclick="showPage('manual',this)">Manual</button>
+      <button class="tab-btn" onclick="showPage('calendar',this)">Calendar</button>
+      <button class="tab-btn" onclick="showPage('history',this)">Reports</button>
+      <button class="tab-btn" onclick="showPage('badges',this)">Badges</button>
+      <button class="tab-btn" onclick="showPage('roster',this)">Roster</button>
+      <button class="tab-btn" onclick="showPage('settings',this)">Settings</button>`;
+    role.innerHTML='🔐 Instructor';
+  } else {
+    tabs.innerHTML=`
+      <button class="tab-btn" onclick="showPage('mystats',this)">My progress</button>
+      <button class="tab-btn" onclick="showPage('badges',this)">Leaderboard</button>`;
+    role.innerHTML='🧘 '+currentStudent;
+  }
+}
+
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const pg=document.getElementById('page-'+name);
+  if(pg) pg.classList.add('active');
+  if(btn) btn.classList.add('active');
+  else {
+    // highlight first matching tab
+    const tabs=document.querySelectorAll('.tab-btn');
+    tabs.forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+name+"'"))t.classList.add('active');});
+  }
+  if(name==='checkin') renderCheckin();
+  if(name==='manual') renderManual();
+  if(name==='calendar') renderCalendar();
+  if(name==='history') renderHistory();
+  if(name==='badges') renderBadges();
+  if(name==='mystats') renderMyStats();
+  if(name==='roster') renderRoster();
+}
+
+// ══ CHECK-IN ══
+function renderCheckin(){
+  const sess=sessionForDate(todayKey());
+  const banner=document.getElementById('session-banner');
+  if(sess){
+    const s=SESSIONS[sess];
+    banner.className='session-banner '+sess;
+    banner.innerHTML=`<div class="sb-icon">${s.emoji}</div><div class="sb-info"><div class="sb-name">${s.name}</div><div class="sb-time">${s.time} · Zoom</div><div class="sb-date">${fmtDate(todayKey())}</div></div>`;
+  } else {
+    banner.className='session-banner noclass';
+    banner.innerHTML=`<div class="sb-icon">🌿</div><div class="sb-info"><div class="sb-name">No class today — rest &amp; restore</div><div class="sb-date">${fmtDate(todayKey())}</div></div>`;
+  }
+  const h=loadHistory();const checked=h[todayKey()]||[];
+  document.getElementById('count-pill').textContent=checked.length+' checked in today';
+  const grid=document.getElementById('students-grid');
+  const roster=loadRoster();
+  if(roster.length===0){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--ink-soft);padding:3rem 1rem;font-size:14px;">No students yet — add them in the Roster tab.</div>';return;}
+  if(!sess){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--ink-soft);padding:3rem 1rem;font-size:14px;">📅 No class today.<br><br><strong>Udaya Yoga</strong> — Mon, Wed, Fri · 7–7:30 am<br><strong>Chintan-Manthan</strong> — Tue, Thu, Sat · 8:30–9 pm</div>';return;}
+  grid.innerHTML='';
+  roster.forEach(name=>{
+    const isChecked=checked.includes(name);
+    const stats=getStudentStats(name);
+    const earned=getBadges(stats);
+    const card=document.createElement('div');
+    card.className='student-card'+(isChecked?' checked':'');
+    card.innerHTML=`
+      <div class="s-avatar">${initials(name)}</div>
+      <div class="s-name">${name}</div>
+      ${stats.currentStreak>0?`<div class="s-streak">🔥 ${stats.currentStreak}</div>`:''}
+      <div class="s-badge-row">${earned.slice(-3).map(b=>`<span style="font-size:13px;">${b.emoji}</span>`).join('')}</div>
+      <div class="s-check">✓ Checked in</div>`;
+    card.onclick=()=>toggleCheckin(name);
+    grid.appendChild(card);
+  });
+}
+
+function toggleCheckin(name){
+  const sess=sessionForDate(todayKey());
+  if(!sess){showToast('No class today!');return;}
+  const h=loadHistory();
+  if(!h[todayKey()]) h[todayKey()]=[];
+  const before=getBadges(getStudentStats(name));
+  if(h[todayKey()].includes(name)){
+    h[todayKey()]=h[todayKey()].filter(n=>n!==name);
+    saveHistory(h);showToast(name+' unchecked');
+  } else {
+    h[todayKey()].push(name);
+    saveHistory(h);
+    const after=getBadges(getStudentStats(name));
+    const newB=after.find(b=>!before.find(x=>x.id===b.id));
+    if(newB) showBadgePopup(name,newB);
+    else showToast('✓ '+name+' checked in!');
+  }
+  renderCheckin();
+}
+
+// ══ MANUAL ENTRY ══
+function populateManualSelects(){
+  const roster=loadRoster();
+  ['m-student','mr-student'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='<option value="">Select student…</option>';
+    roster.forEach(n=>sel.innerHTML+=`<option value="${n}">${n}</option>`);
+  });
+  document.getElementById('m-date').value=todayKey();
+  document.getElementById('mr-date').value=todayKey();
+}
+
+function renderManual(){populateManualSelects();}
+
+function manualAdd(){
+  const name=document.getElementById('m-student').value;
+  const date=document.getElementById('m-date').value;
+  const res=document.getElementById('m-result');
+  if(!name||!date){res.textContent='Please select a student and date.';res.style.color='var(--red)';return;}
+  const sess=sessionForDate(date);
+  if(!sess){res.textContent='⚠️ That date has no scheduled class.';res.style.color='var(--clay)';return;}
+  const h=loadHistory();
+  if(!h[date]) h[date]=[];
+  if(h[date].includes(name)){res.textContent=name+' already marked for this date.';res.style.color='var(--clay)';return;}
+  const before=getBadges(getStudentStats(name));
+  h[date].push(name);saveHistory(h);
+  const after=getBadges(getStudentStats(name));
+  const newB=after.find(b=>!before.find(x=>x.id===b.id));
+  res.style.color='var(--sage)';
+  res.textContent='✓ Added attendance for '+name+' on '+fmtDate(date)+(newB?' 🎉 Badge earned: '+newB.name:'');
+  if(newB) showBadgePopup(name,newB);
+}
+
+function manualRemove(){
+  const name=document.getElementById('mr-student').value;
+  const date=document.getElementById('mr-date').value;
+  const res=document.getElementById('mr-result');
+  if(!name||!date){res.textContent='Please select a student and date.';return;}
+  const h=loadHistory();
+  if(!h[date]||!h[date].includes(name)){res.textContent=name+' has no attendance on that date.';return;}
+  h[date]=h[date].filter(n=>n!==name);
+  saveHistory(h);
+  res.textContent='✓ Removed attendance for '+name+' on '+fmtDate(date);
+}
+
+// ══ CALENDAR ══
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+function renderCalendar(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month').textContent=months[calMonth]+' '+calYear;
+  const h=loadHistory();
+  const first=new Date(calYear,calMonth,1),last=new Date(calYear,calMonth+1,0);
+  const startDay=first.getDay(),daysInMonth=last.getDate(),todayStr=todayKey();
+  let html='';
+  for(let i=0;i<startDay;i++){const d=new Date(calYear,calMonth,0-startDay+i+1);html+=`<div class="cal-day other-month"><span class="cal-day-num">${d.getDate()}</span></div>`;}
+  for(let d=1;d<=daysInMonth;d++){
+    const dt=new Date(calYear,calMonth,d),key=dt.toISOString().slice(0,10);
+    const sess=sessionForDate(key),att=h[key]||[],isToday=key===todayStr;
+    let cls='cal-day';
+    if(sess==='udaya')cls+=' udaya-day';
+    if(sess==='chintan')cls+=' chintan-day';
+    if(att.length>0)cls+=' has-att';
+    if(isToday)cls+=' today';
+    const dot=att.length>0?`<div class="cal-dot ${sess}"></div>`:'';
+    const cnt=att.length>0?`<div class="cal-count">${att.length}</div>`:'';
+    const oc=att.length>0?`onclick="showCalDetail('${key}')"` :'';
+    html+=`<div class="${cls}" ${oc}><span class="cal-day-num" style="${isToday?'font-weight:700;color:var(--sage)':''}">${d}</span>${dot}${cnt}</div>`;
+  }
+  const rem=(7-((startDay+daysInMonth)%7))%7;
+  for(let i=1;i<=rem;i++)html+=`<div class="cal-day other-month"><span class="cal-day-num">${i}</span></div>`;
+  document.getElementById('cal-days').innerHTML=html;
+  document.getElementById('cal-detail').innerHTML='';
+}
+function showCalDetail(key){
+  const h=loadHistory(),names=h[key]||[],sess=sessionForDate(key),sInfo=sess?SESSIONS[sess]:{name:'Class',emoji:'📅'};
+  document.getElementById('cal-detail').innerHTML=`
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;margin-top:.5rem;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:20px;">${sInfo.emoji}</span>
+        <div><strong style="font-size:14px;">${sInfo.name}</strong><br><span style="font-size:12px;color:var(--ink-soft);">${fmtDate(key)} · ${names.length} student${names.length!==1?'s':''}</span></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${names.map(n=>`<span class="name-chip">${n}</span>`).join('')}</div>
+    </div>`;
+}
+
+// ══ HISTORY ══
+function setFilter(f,btn){historyFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderHistory();}
+function renderHistory(){
+  const h=loadHistory();
+  let dates=Object.keys(h).filter(d=>h[d].length>0).sort().reverse();
+  if(historyFilter!=='all') dates=dates.filter(d=>sessionForDate(d)===historyFilter);
+  const all=Object.keys(h).filter(d=>h[d].length>0);
+  const tot=all.reduce((s,d)=>s+h[d].length,0);
+  document.getElementById('stat-classes').textContent=all.length;
+  document.getElementById('stat-total').textContent=tot;
+  document.getElementById('stat-avg').textContent=all.length?(tot/all.length).toFixed(1):'—';
+  const list=document.getElementById('history-list');
+  if(dates.length===0){list.innerHTML='<div class="no-history">No attendance recorded yet.</div>';return;}
+  list.innerHTML='';
+  dates.forEach(d=>{
+    const names=h[d],sess=sessionForDate(d),sInfo=sess?SESSIONS[sess]:{name:'Class',emoji:'📅'};
+    const item=document.createElement('div');item.className='history-item';
+    item.innerHTML=`
+      <div class="history-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="session-dot ${sess||''}"></div>
+        <div class="history-date-badge">${d}</div>
+        <div class="history-info"><strong>${sInfo.emoji} ${sInfo.name}</strong><span>${fmtDate(d)} · ${names.length} student${names.length!==1?'s':''}</span></div>
+        <div class="chevron">⌄</div>
+      </div>
+      <div class="history-names">${names.map(n=>`<div class="name-chip">${n}</div>`).join('')}</div>`;
+    list.appendChild(item);
+  });
+}
+
+// ══ BADGES / LEADERBOARD ══
+function renderBadges(){
+  const roster=loadRoster();
+  const lb=document.getElementById('lb-list');
+  if(roster.length===0){lb.innerHTML='<div style="color:var(--ink-soft);font-size:13px;padding:1rem;">Add students in the Roster tab first.</div>';}
+  else {
+    const rows=roster.map(name=>{const s=getStudentStats(name);return{name,stats:s,earned:getBadges(s)};})
+      .sort((a,b)=>b.stats.total-a.stats.total||b.stats.currentStreak-a.stats.currentStreak);
+    lb.innerHTML='';
+    rows.forEach((r,i)=>{
+      const rank=i+1,rc=rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
+      const row=document.createElement('div');row.className='lb-row';
+      row.innerHTML=`
+        <div class="lb-rank ${rc}">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</div>
+        <div class="lb-avatar">${initials(r.name)}</div>
+        <div class="lb-name">${r.name}</div>
+        <div class="lb-badges-row">${r.earned.slice(-4).map(b=>`<span style="font-size:14px;">${b.emoji}</span>`).join('')}</div>
+        ${r.stats.currentStreak>0?`<div class="lb-streak">🔥 ${r.stats.currentStreak}</div>`:''}
+        <div class="lb-total">${r.stats.total} classes</div>`;
+      lb.appendChild(row);
+    });
+  }
+  const guide=document.getElementById('badge-guide');
+  guide.innerHTML='';
+  BADGES.forEach(b=>{
+    const card=document.createElement('div');card.className='badge-card locked';
+    card.innerHTML=`<div class="badge-emoji">${b.emoji}</div><div class="badge-name">${b.name}</div><div class="badge-desc">${b.desc}</div>`;
+    guide.appendChild(card);
+  });
+}
+
+// ══ MY STATS (student) ══
+function renderMyStats(){
+  const name=currentStudent;
+  const stats=getStudentStats(name);
+  const earned=getBadges(stats);
+  const container=document.getElementById('my-stats-content');
+  container.innerHTML=`
+    <div class="my-stats">
+      <div class="my-stats-head">
+        <div class="my-avatar">${initials(name)}</div>
+        <div><div class="my-name">${name}</div><div class="my-role">Student</div></div>
+      </div>
+      <div class="my-grid">
+        <div class="my-stat"><div class="my-stat-val">${stats.total}</div><div class="my-stat-lbl">Classes</div></div>
+        <div class="my-stat"><div class="my-stat-val">${stats.currentStreak>0?'🔥'+stats.currentStreak:stats.currentStreak}</div><div class="my-stat-lbl">Streak</div></div>
+        <div class="my-stat"><div class="my-stat-val">${earned.length}</div><div class="my-stat-lbl">Badges</div></div>
+      </div>
+      ${earned.length>0?`<div style="font-size:12px;font-weight:500;color:var(--ink-mid);margin-bottom:8px;">Your badges</div>
+        <div class="my-badges">${earned.map(b=>`<div class="my-badge"><span style="font-size:18px;">${b.emoji}</span><div><div style="font-size:12px;font-weight:500;">${b.name}</div><div style="font-size:10px;color:var(--ink-soft);">${b.desc}</div></div></div>`).join('')}</div>`
+        :'<div style="font-size:13px;color:var(--ink-soft);">Keep attending classes to earn badges! 🌱</div>'}
+    </div>
+    <div style="font-size:13px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.7rem;">📅 Upcoming classes</div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">🌅</span><div><strong style="font-size:13px;">Udaya Yoga</strong><div style="font-size:12px;color:var(--ink-soft);">Monday, Wednesday, Friday · 7:00 – 7:30 am · Zoom</div></div></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">🌙</span><div><strong style="font-size:13px;">Chintan-Manthan</strong><div style="font-size:12px;color:var(--ink-soft);">Tuesday, Thursday, Saturday · 8:30 – 9:00 pm · Zoom</div></div></div>
+    </div>`;
+}
+
+// ══ ROSTER ══
+function renderRoster(){
+  const roster=loadRoster(),h=loadHistory();
+  const list=document.getElementById('roster-list');list.innerHTML='';
+  roster.forEach((name,i)=>{
+    const stats=getStudentStats(name),earned=getBadges(stats);
+    const row=document.createElement('div');row.className='roster-row';
+    row.innerHTML=`
+      <div class="r-avatar">${initials(name)}</div>
+      <div style="flex:1;font-size:13px;">${name}</div>
+      <div style="display:flex;gap:2px;margin-right:6px;">${earned.slice(-3).map(b=>`<span style="font-size:13px;">${b.emoji}</span>`).join('')}</div>
+      <div class="r-meta">${stats.total} classes${stats.currentStreak>0?' · 🔥'+stats.currentStreak:''}</div>
+      <button class="btn-del" onclick="removeStudent(${i})">×</button>`;
+    list.appendChild(row);
+  });
+  if(roster.length===0) list.innerHTML='<div style="color:var(--ink-soft);font-size:13px;text-align:center;padding:2rem;">No students yet. Type a name above.</div>';
+}
+function addStudent(){
+  const input=document.getElementById('roster-input'),name=input.value.trim();
+  if(!name) return;
+  const roster=loadRoster();
+  if(roster.map(n=>n.toLowerCase()).includes(name.toLowerCase())){showToast('Already exists!');return;}
+  roster.push(name);saveRoster(roster);input.value='';
+  renderRoster();populateManualSelects();
+  showToast('Added '+name);
+}
+function removeStudent(i){
+  const roster=loadRoster(),name=roster[i];
+  if(!confirm('Remove '+name+' from the roster?')) return;
+  roster.splice(i,1);saveRoster(roster);renderRoster();populateManualSelects();showToast('Removed '+name);
+}
+document.getElementById('roster-input').addEventListener('keydown',e=>{if(e.key==='Enter')addStudent();});
+
+// ══ SETTINGS ══
+function savePass(n){
+  const val=document.getElementById('set-pass'+n).value.trim();
+  if(!val){showToast('Enter a passcode first');return;}
+  const passes=loadPasses();
+  passes[n-1]=val;savePasses(passes);
+  document.getElementById('set-pass'+n).value='';
+  showToast('Passcode '+(n===1?'1':'2')+' updated ✓');
+}
+function clearAllAttendance(){
+  if(!confirm('Delete ALL attendance records? This cannot be undone.')) return;
+  saveHistory({});showToast('Attendance cleared');
+}
+function clearAllData(){
+  if(!confirm('Reset the entire app? All students, attendance and passcodes will be deleted.')) return;
+  localStorage.removeItem(KR);localStorage.removeItem(KH);localStorage.removeItem(KP);
+  logout();showToast('App reset');
+}
+
+// ══ BADGE POPUP ══
+function showBadgePopup(name,badge){
+  document.getElementById('bp-emoji').textContent=badge.emoji;
+  document.getElementById('bp-title').textContent='Badge unlocked!';
+  document.getElementById('bp-sub').textContent=name+' earned "'+badge.name+'" — '+badge.desc;
+  document.getElementById('badge-popup').classList.add('show');
+}
+function closeBadgePopup(){document.getElementById('badge-popup').classList.remove('show');}
+
+// ══ TOAST ══
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══ INIT ══
+populateStudentSelect();
+</script>
+</body>
+</html>
